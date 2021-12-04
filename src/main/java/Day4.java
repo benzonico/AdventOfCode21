@@ -1,6 +1,4 @@
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.function.Predicate;
 
 public class Day4 {
@@ -8,29 +6,28 @@ public class Day4 {
         String[] input = Utils.readLines("input4.txt");
 
         List<int[][]> boards = getboards(input);
-
+        List<Integer> boardWon = new ArrayList<>();
+        List<Integer> winningDraw = new ArrayList<>();
         int[] numberDrawn = Arrays.stream(input[0].split(",")).mapToInt(Integer::parseInt).toArray();
         for (int draw : numberDrawn) {
             System.out.println("Drawing "+draw);
-            for (int[][] board : boards) {
+            for (int boardIndex = 0; boardIndex < boards.size(); boardIndex++) {
+                if (boardWon.contains(boardIndex)) {
+                    continue;
+                }
+                int[][] board = boards.get(boardIndex);
                 Pos pos = findInBoard(draw, board);
                 if (pos != Pos.NOT_FOUND) {
-                    if(board[pos.line][pos.col] != draw) {
-                        System.out.println(board[pos.line][pos.col] +"  ---  "+ draw);
-                        System.out.println(pos.line);
-                        System.out.println(pos.col);
-                        return;
-                    }
                     board[pos.line][pos.col] = -1;
-                    System.out.println(boardToString(board));
+//                    System.out.println(boardToString(board));
                     if (isWinning(board)) {
-                        System.out.println("WINNING");
-                        System.out.println(computeScore(board, draw));
-                        return;
+                        boardWon.add(boardIndex);
+                        winningDraw.add(draw);
                     }
                 }
             }
         }
+        System.out.println(computeScore(boards.get(boardWon.get(boardWon.size()-1)), winningDraw.get(winningDraw.size()-1)));
 
     }
 
