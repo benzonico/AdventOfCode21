@@ -92,7 +92,7 @@ public class Day4 {
 
     private static List<int[][]> getboards(String[] input) {
         List<int[][]> res = new ArrayList<>();
-        int[][] board = new int[5][];
+       /* int[][] board = new int[5][];
         int boardLine = 0;
         for (int i = 2; i < input.length; i++) {
             String line = input[i];
@@ -108,7 +108,7 @@ public class Day4 {
                     throw new IllegalStateException("woopsie");
                 }
             }
-        }
+        }*/
         return res;
     }
 
