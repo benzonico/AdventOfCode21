@@ -1,8 +1,10 @@
+package aoc21;
+
 import java.util.Arrays;
 
 public class Day7 {
     public static void main(String[] args) {
-        String[] input = Utils.readLines("input7.txt");
+        String[] input = Utils.readLines("aoc21/input7.txt");
         int[] positions = Arrays.stream(input[0].split(",")).mapToInt(Integer::parseInt).toArray();
 
         int max = -2;

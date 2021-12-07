@@ -1,3 +1,5 @@
+package aoc21;
+
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 
@@ -8,7 +10,7 @@ import java.util.Objects;
 
 public class Day5 {
     public static void main(String[] args) {
-        String[] input = Utils.readLines("input5.txt");
+        String[] input = Utils.readLines("aoc21/input5.txt");
         List<Vent> vents = parseLines(input);
         Multiset<Point> points = HashMultiset.create();
         for (Vent v : vents) {

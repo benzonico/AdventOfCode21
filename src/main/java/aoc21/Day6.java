@@ -1,7 +1,9 @@
+package aoc21;
+
 public class Day6 {
 
   public static void main(String[] args) {
-    String input = Utils.readLines("input6.txt")[0];
+    String input = Utils.readLines("aoc21/input6.txt")[0];
     String[] split = input.split(",");
 
 

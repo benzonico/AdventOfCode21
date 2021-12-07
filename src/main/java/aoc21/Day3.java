@@ -1,4 +1,5 @@
-import java.util.ArrayList;
+package aoc21;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -7,7 +8,7 @@ public class Day3 {
 
 
     public static void main(String[] args) {
-        String[] input = Utils.readLines("input3.txt");
+        String[] input = Utils.readLines("aoc21/input3.txt");
         int[] setPositions = findSetPositions(input);
 //        part1(input, setPositions);
         part2(input, setPositions);

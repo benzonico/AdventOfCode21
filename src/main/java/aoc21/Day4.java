@@ -1,9 +1,10 @@
+package aoc21;
+
 import java.util.*;
-import java.util.function.Predicate;
 
 public class Day4 {
     public static void main(String[] args) {
-        String[] input = Utils.readLines("input4.txt");
+        String[] input = Utils.readLines("aoc21/input4.txt");
 
         List<int[][]> boards = getboards(input);
         List<Integer> boardWon = new ArrayList<>();
