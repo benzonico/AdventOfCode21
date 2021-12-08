@@ -7,6 +7,11 @@ import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 
 class PuzzleInputWriter(private val sessionId: String) {
+
+    fun linesOfDay(year: String, day: Int): List<String> {
+        return writeDayPuzzleToFile(year, day).readLines()
+    }
+
     fun writeDayPuzzleToFile(year: String, day: Int): File {
         val file = File("src/main/resources/aoc${year.substring(2)}/day$day.txt")
         if (!file.exists()) {

@@ -1,24 +1,42 @@
 package aoc20
 
 import utils.PuzzleInputWriter
+import java.io.File
 
 
 fun main(args: Array<String>) {
-//    val sessionId = args[0]
-//    val puzzleInputWriter = PuzzleInputWriter(sessionId)
-//    for(i in 1..25){
-//        puzzleInputWriter.writeDayPuzzleToFile("2020", i)
-//    }
-    day3()
+    val sessionId = args[0]
+    val puzzleInputWriter = PuzzleInputWriter(sessionId)
+    day4(puzzleInputWriter.linesOfDay("2020", 4))
 }
 
 
-fun day4() {
-    val lines = getResourceAsText("day4.txt").split("\r\n")
+fun day4(lines: List<String>) {
+    var count = 0;
+    var hasCid = false
+    var valid = 0;
+    for (line in lines.flatMap { s -> s.split(" ") }.flatMap { s -> s.split(":") }) {
+        println(line)
+        if (line.isBlank()) {
+            println("blank" +count)
+            if (count == 16 || (hasCid && count == 14)) {
+                valid++
+            }
+            hasCid = false
+            count = 0
+        } else {
+            count++
+            hasCid = hasCid || line == "cid"
+        }
+    }
+    if (count == 16 || (hasCid && count == 14)) {
+        valid++
+    }
+    println(valid)
 }
 
-fun day3() {
-    val lines = getResourceAsText("day3.txt").split("\r\n")
+fun day3(day3: File) {
+    val lines = day3.readLines()
     println(countTrees(lines, 1, 1) * countTrees(lines, 3, 1) * countTrees(lines, 5, 1) * countTrees(lines, 7, 1) * countTrees(lines, 1, 2))
 }
 
