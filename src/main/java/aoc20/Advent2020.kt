@@ -7,32 +7,62 @@ import java.io.File
 fun main(args: Array<String>) {
     val sessionId = args[0]
     val puzzleInputWriter = PuzzleInputWriter(sessionId)
-    day4(puzzleInputWriter.linesOfDay("2020", 4))
+    val day = 4
+//    val lines = File("src/main/resources/aoc20/day"+day+"_test.txt").readLines()
+    val lines = puzzleInputWriter.linesOfDay("2020", day)
+    day4(lines)
 }
 
 
 fun day4(lines: List<String>) {
-    var count = 0;
-    var hasCid = false
-    var valid = 0;
-    for (line in lines.flatMap { s -> s.split(" ") }.flatMap { s -> s.split(":") }) {
-        println(line)
-        if (line.isBlank()) {
-            println("blank" +count)
-            if (count == 16 || (hasCid && count == 14)) {
-                valid++
-            }
-            hasCid = false
-            count = 0
+    var currentPassport = Passport()
+    val passports = ArrayList<Passport>()
+    passports.add(currentPassport)
+    for (line in lines) {
+        if(line.isBlank()) {
+            currentPassport = Passport()
+            passports.add(currentPassport)
         } else {
-            count++
-            hasCid = hasCid || line == "cid"
+            currentPassport.addFields(line)
         }
     }
-    if (count == 16 || (hasCid && count == 14)) {
-        valid++
+    println(passports.count { p -> p.hasValidNumberOfField() && p.validateFields() })
+}
+
+class Passport {
+    var myMap= HashMap<String, String>()
+    fun addFields(s:String) {
+        myMap.putAll(s.split(" ").map { e -> e.split(":") }.associateBy({e -> e[0]}, {e-> e[1]}))
     }
-    println(valid)
+    fun hasValidNumberOfField():Boolean {
+        return myMap.size == 8 || (myMap.size == 7 && !myMap.keys.contains("cid"))
+    }
+
+    fun validateFields():Boolean{
+        return myMap.all(::validateField)
+    }
+
+    private fun validateField(entry: Map.Entry<String, String>):Boolean {
+        val value = entry.value
+        val res=  when (entry.key) {
+            "byr" -> value.matches(Regex("\\d{4}")) && (1920..2002).contains(value.toInt())
+            "iyr" -> value.matches(Regex("\\d{4}")) && (2010..2020).contains(value.toInt())
+            "eyr" -> value.matches(Regex("\\d{4}")) && (2020..2030).contains(value.toInt())
+            "hgt" -> value.matches(Regex("\\d+(cm|in)")) && run {
+                val toInt = value.substring(0, value.length - 2).toInt()
+                if (value.endsWith("cm")) (150..193).contains(toInt) else (59..76).contains(toInt)
+            }
+            "hcl" -> value.startsWith("#") && value.substring(1, value.length).matches(Regex("[0-9a-f]{6}"))
+            "ecl" -> listOf("amb", "blu", "brn", "gry", "grn", "hzl", "oth").contains(value)
+            "pid" -> value.matches(Regex("\\d{9}"))
+            "cid" -> true
+            else -> false
+        }
+        if(!res) println(entry.key+"  "+entry.value)
+        return res
+    }
+
+
 }
 
 fun day3(day3: File) {
