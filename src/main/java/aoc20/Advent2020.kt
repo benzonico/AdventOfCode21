@@ -7,19 +7,63 @@ import java.io.File
 fun main(args: Array<String>) {
     val sessionId = args[0]
     val puzzleInputWriter = PuzzleInputWriter(sessionId)
-    val day = 4
+    val day = 6
+//    val lines = listOf("FBFBBFFRLR")
 //    val lines = File("src/main/resources/aoc20/day"+day+"_test.txt").readLines()
     val lines = puzzleInputWriter.linesOfDay("2020", day)
-    day4(lines)
+    day6(lines)
 }
 
+fun day6(lines: List<String>) {
+    var currentAnswer:Iterable<Char>? = null
+    var res = 0
+    for (line in lines) {
+        if (line.isBlank()) {
+            val size = currentAnswer!!.toList().size
+            res += size
+            currentAnswer = null
+        } else {
+            currentAnswer = currentAnswer?.intersect(line.toSet()) ?: line.toList()
+        }
+    }
+    res+=currentAnswer!!.toList().size
+    println(res)
+}
+
+fun day5(lines: List<String>) {
+    println(lines.maxOf { l -> seatId(l) })
+    val seatIds = lines.map { l -> seatId(l) }
+    println(seatIds.filter { i -> !seatIds.contains(i - 1) })
+    println(seatIds.filter { i -> !seatIds.contains(i + 1) })
+
+
+}
+
+fun seatId(s: String): Int {
+    val seat = seat(s)
+    return seat.first * 8 + seat.second
+}
+
+fun seat(s: String): Pair<Int, Int> {
+    var range = 0..127
+    s.substring(0, 7).forEach { c -> range = reduceRange(range, c, 'F') }
+    val row = range.first
+    range = 0..7
+    s.substring(7, s.length).forEach { c -> range = reduceRange(range, c, 'L') }
+    return Pair(row, range.first)
+}
+
+fun reduceRange(intRange: IntRange, c: Char, rowOrSeat: Char): IntRange {
+    val half = intRange.first + (intRange.last - intRange.first) / 2
+    return if (intRange.first == intRange.last) intRange else if (c == rowOrSeat) IntRange(intRange.first, half) else IntRange(half + 1, intRange.last)
+}
 
 fun day4(lines: List<String>) {
     var currentPassport = Passport()
     val passports = ArrayList<Passport>()
     passports.add(currentPassport)
     for (line in lines) {
-        if(line.isBlank()) {
+        if (line.isBlank()) {
             currentPassport = Passport()
             passports.add(currentPassport)
         } else {
@@ -30,21 +74,22 @@ fun day4(lines: List<String>) {
 }
 
 class Passport {
-    var myMap= HashMap<String, String>()
-    fun addFields(s:String) {
-        myMap.putAll(s.split(" ").map { e -> e.split(":") }.associateBy({e -> e[0]}, {e-> e[1]}))
+    var myMap = HashMap<String, String>()
+    fun addFields(s: String) {
+        myMap.putAll(s.split(" ").map { e -> e.split(":") }.associateBy({ e -> e[0] }, { e -> e[1] }))
     }
-    fun hasValidNumberOfField():Boolean {
+
+    fun hasValidNumberOfField(): Boolean {
         return myMap.size == 8 || (myMap.size == 7 && !myMap.keys.contains("cid"))
     }
 
-    fun validateFields():Boolean{
+    fun validateFields(): Boolean {
         return myMap.all(::validateField)
     }
 
-    private fun validateField(entry: Map.Entry<String, String>):Boolean {
+    private fun validateField(entry: Map.Entry<String, String>): Boolean {
         val value = entry.value
-        val res=  when (entry.key) {
+        val res = when (entry.key) {
             "byr" -> value.matches(Regex("\\d{4}")) && (1920..2002).contains(value.toInt())
             "iyr" -> value.matches(Regex("\\d{4}")) && (2010..2020).contains(value.toInt())
             "eyr" -> value.matches(Regex("\\d{4}")) && (2020..2030).contains(value.toInt())
@@ -58,7 +103,7 @@ class Passport {
             "cid" -> true
             else -> false
         }
-        if(!res) println(entry.key+"  "+entry.value)
+        if (!res) println(entry.key + "  " + entry.value)
         return res
     }
 
