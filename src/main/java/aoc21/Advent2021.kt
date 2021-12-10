@@ -10,12 +10,46 @@ import kotlin.collections.HashSet
 fun main(args: Array<String>) {
     val sessionId = args[0]
     val day = Calendar.getInstance().get(Calendar.DAY_OF_MONTH)
-//    val lines = File("src/main/resources/aoc21/day9_test.txt").readLines()
+//    val lines = File("src/main/resources/aoc21/day10_test.txt").readLines()
     val lines = PuzzleInputWriter(sessionId).writeDayPuzzleToFile("2021", day).readLines()
     day(lines)
 }
 
 fun day(lines: List<String>) {
+    val scores = lines.map { l -> computeScore(l) }.filter { i -> i>0 }.sorted()
+    println(scores[scores.size/2])
+}
+
+fun computeScore(l: String):Long {
+    val open = listOf('(', '[', '{', '<')
+    val close = listOf(')', ']', '}', '>')
+    val score = listOf(3, 57, 1197, 25137)
+    val stack = ArrayDeque<Int>()
+    var tot = 0L
+    for (c in l) {
+        val opening = open.indexOf(c)
+        if(opening != -1) {
+            // open char
+            stack.push(opening)
+        } else {
+            val closing = close.indexOf(c)
+            val expected = stack.pop()
+            if (closing != expected) {
+                //corrupted
+    //                println("found $c instead of "+ open[expected])
+    //                tot+= score[closing]
+                return -1
+            }
+        }
+
+    }
+    for (index in stack) {
+        tot = tot*5 + (index+1)
+    }
+    return tot
+}
+
+fun day9(lines: List<String>) {
 //    println( lines.flatMapIndexed{ j, l -> l.mapIndexed{ i, nb -> riskLevel(i, j, nb.toString().toInt(), lines) }}.sum())
     val lowestPoints = lines.flatMapIndexed { y, l -> l.mapIndexed { i, nb ->
         if(isLowest(i, y, nb.toString().toInt(), lines)) Point(i, y, nb.toString().toInt()) else null
