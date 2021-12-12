@@ -7,13 +7,46 @@ import java.io.File
 fun main(args: Array<String>) {
     val sessionId = args[0]
     val puzzleInputWriter = PuzzleInputWriter(sessionId)
-    val day = 7
+    val day = 8
 //    val lines = listOf("FBFBBFFRLR")
-//    val lines = File("src/main/resources/aoc20/day"+day+"_test.txt").readLines()
-    val lines = puzzleInputWriter.linesOfDay("2020", day)
-    day7(lines)
+    val lines = File("src/main/resources/aoc20/day"+day+"_test.txt").readLines()
+//    val lines = puzzleInputWriter.linesOfDay("2020", day)
+    day8(lines)
 }
 
+fun day8(lines: List<String>) {
+    val instructions = lines.map { s -> s.split(" ").let { split -> Pair(split[0], split[1].toInt()) } }
+    val indexOfNopJmp = instructions.mapIndexed { i, instr -> if (instr.first == "acc") null else i }.filterNotNull()
+
+    var acc = 0;
+    for (toSwitch in indexOfNopJmp) {
+        var index = 0;
+        acc = 0;
+        val seen = emptySet<Int>().toMutableSet()
+        while (true) {
+            if (!seen.add(index) || index == instructions.size) {
+                break
+            }
+            val instVal = instructions[index].second
+            var instName = instructions[index].first
+            if(index == toSwitch) {
+                instName = if(instName == "nop") "jmp" else "nop"
+            }
+            when (instName) {
+                "nop" -> index++
+                "jmp" -> index += instVal
+                "acc" -> {
+                    acc += instVal
+                    index++
+                }
+            }
+        }
+        if(index == instructions.size) {
+            break
+        }
+    }
+    println(acc)
+}
 fun day7(lines: List<String>) {
     class Bag(toParse: String) {
         val bagsAsString: Map<String, Int>
