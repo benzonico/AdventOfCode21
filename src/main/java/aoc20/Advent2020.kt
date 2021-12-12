@@ -7,15 +7,71 @@ import java.io.File
 fun main(args: Array<String>) {
     val sessionId = args[0]
     val puzzleInputWriter = PuzzleInputWriter(sessionId)
-    val day = 6
+    val day = 7
 //    val lines = listOf("FBFBBFFRLR")
 //    val lines = File("src/main/resources/aoc20/day"+day+"_test.txt").readLines()
     val lines = puzzleInputWriter.linesOfDay("2020", day)
-    day6(lines)
+    day7(lines)
+}
+
+fun day7(lines: List<String>) {
+    class Bag(toParse: String) {
+        val bagsAsString: Map<String, Int>
+        val name: String
+        val isIn:MutableList<Bag> = listOf<Bag>().toMutableList()
+
+        init {
+            val split = toParse.split(" contain ")
+            name = split[0].replace("bags", "bag").replace("bag", "").trim()
+            bagsAsString = parseBag(split[1])
+        }
+
+        fun parseBag(toParse: String): Map<String, Int> {
+            val split = toParse.substring(0, toParse.length - 1).replace("bags", "bag").replace("bag", "").split(" , ")
+            return split.associateBy(
+                { s -> s.substring(2, s.length).trim() },
+                { s -> if (s.startsWith("no")) 0 else s.substring(0, 1).toInt() })
+        }
+
+        override fun toString(): String {
+            return "Bag(name='$name')"
+        }
+
+        fun updateIsIn(bagByName:Map<String, Bag>){
+            bagsAsString.keys.forEach{s -> bagByName[s]?.isIn?.add(this)}
+        }
+
+
+    }
+
+    val bagByName = lines.map(::Bag).associateBy { b -> b.name }
+    bagByName.values.forEach{b -> b.updateIsIn(bagByName)}
+    println(bagByName)
+    fun containers(name:String):Set<Bag> {
+        val currentContainers = bagByName[name]!!.isIn
+        if(currentContainers.isEmpty()){
+            return emptySet()
+        }
+        return setOf(currentContainers, currentContainers.flatMap { b -> containers(b.name) } ).flatten().toSet()
+    }
+
+    fun bagScore(name:String):Int{
+        if(name=="other") {
+            return 1
+        }
+        val bagsAsString = bagByName[name]!!.bagsAsString
+        return bagsAsString.map { e-> val bagScore = bagScore(e.key)+1
+            println("${e.key} $bagScore*${e.value}")
+            bagScore *e.value }.sum()
+    }
+
+    println(containers("shiny gold").size)
+    println(bagScore("shiny gold"))
+
 }
 
 fun day6(lines: List<String>) {
-    var currentAnswer:Iterable<Char>? = null
+    var currentAnswer: Iterable<Char>? = null
     var res = 0
     for (line in lines) {
         if (line.isBlank()) {
@@ -26,7 +82,7 @@ fun day6(lines: List<String>) {
             currentAnswer = currentAnswer?.intersect(line.toSet()) ?: line.toList()
         }
     }
-    res+=currentAnswer!!.toList().size
+    res += currentAnswer!!.toList().size
     println(res)
 }
 
@@ -55,7 +111,10 @@ fun seat(s: String): Pair<Int, Int> {
 
 fun reduceRange(intRange: IntRange, c: Char, rowOrSeat: Char): IntRange {
     val half = intRange.first + (intRange.last - intRange.first) / 2
-    return if (intRange.first == intRange.last) intRange else if (c == rowOrSeat) IntRange(intRange.first, half) else IntRange(half + 1, intRange.last)
+    return if (intRange.first == intRange.last) intRange else if (c == rowOrSeat) IntRange(
+        intRange.first,
+        half
+    ) else IntRange(half + 1, intRange.last)
 }
 
 fun day4(lines: List<String>) {
@@ -112,12 +171,19 @@ class Passport {
 
 fun day3(day3: File) {
     val lines = day3.readLines()
-    println(countTrees(lines, 1, 1) * countTrees(lines, 3, 1) * countTrees(lines, 5, 1) * countTrees(lines, 7, 1) * countTrees(lines, 1, 2))
+    println(
+        countTrees(lines, 1, 1) * countTrees(lines, 3, 1) * countTrees(lines, 5, 1) * countTrees(
+            lines,
+            7,
+            1
+        ) * countTrees(lines, 1, 2)
+    )
 }
 
 
 private fun countTrees(lines: List<String>, horiz: Int, vert: Int) =
-        lines.filterIndexed { index, s -> index % vert == 0 }.mapIndexed { index, l -> l[(index * horiz) % l.length] }.count { c -> c == '#' }.toLong()
+    lines.filterIndexed { index, s -> index % vert == 0 }.mapIndexed { index, l -> l[(index * horiz) % l.length] }
+        .count { c -> c == '#' }.toLong()
 
 fun day2() {
     val passwords = getResourceAsText("day2.txt").split("\r\n")
@@ -141,8 +207,8 @@ class Pwd(val value: String, val letter: String, val pos1: Int, val pos2: Int) {
 
 fun day1() {
     val expenses = getResourceAsText("day1.txt").split("\r\n")
-            .filter { s -> s.isNotBlank() }
-            .map { s -> Integer.parseInt(s) }
+        .filter { s -> s.isNotBlank() }
+        .map { s -> Integer.parseInt(s) }
     for (expense in expenses) {
         for (expense2 in expenses) {
             for (expense3 in expenses) {

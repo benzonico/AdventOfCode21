@@ -8,8 +8,9 @@ import java.util.*
 fun main(args: Array<String>) {
     val sessionId = args[0]
     val day = Calendar.getInstance().get(Calendar.DAY_OF_MONTH)
+    val puzzleInputWriter = PuzzleInputWriter(sessionId)
 //    val lines = File("src/main/resources/aoc21/day12_test3.txt").readLines()
-    val lines = PuzzleInputWriter(sessionId).writeDayPuzzleToFile("2021", day).readLines()
+    val lines = puzzleInputWriter.writeDayPuzzleToFile("2021", day).readLines()
     day(lines)
 }
 typealias Path = List<String>
