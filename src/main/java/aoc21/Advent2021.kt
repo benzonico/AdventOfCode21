@@ -3,15 +3,18 @@ package aoc21
 import utils.PuzzleInputWriter
 import java.io.File
 import java.util.*
+import com.github.ajalt.mordant.rendering.TextColors.*
+import com.github.ajalt.mordant.rendering.TextStyles.*
+import com.github.ajalt.mordant.terminal.Terminal
 
-
+// https://github.com/ajalt/mordant text formatting
 fun main(args: Array<String>) {
     val sessionId = args[0]
     val day = Calendar.getInstance().get(Calendar.DAY_OF_MONTH)
     val puzzleInputWriter = PuzzleInputWriter(sessionId)
 //    val lines = File("src/main/resources/aoc21/day12_test3.txt").readLines()
-    val lines = puzzleInputWriter.writeDayPuzzleToFile("2021", day).readLines()
-    day(lines)
+    val lines = puzzleInputWriter.writeDayPuzzleToFile("2021", 11).readLines()
+    day11(lines)
 }
 typealias Path = List<String>
 
@@ -100,53 +103,61 @@ fun day(lines: List<String>) {
 fun day11(lines: List<String>) {
     var parse = lines.map { l -> l.toCharArray().map { c -> c.toString().toInt() } }
     var matrix = parse.map { l -> l.toMutableList() }.toMutableList()
-    /*var tot = 0
+    fun sync(matrix: MutableList<MutableList<Int>>): Boolean {
+        return matrix.all { l -> l.all { i -> i == 0 } }
+    }
+    fun step(matrix: MutableList<MutableList<Int>>): Pair<MutableList<MutableList<Int>>, Int> {
+        val toUpdate = ArrayDeque<Pair<Int, Int>>()
+        toUpdate.addAll((0..9).toList().flatMap { x -> (0..9).toList().map { y -> Pair(x, y) } })
+        var tot = 0
+        val flashed = HashSet<Pair<Int, Int>>()
+        while (!toUpdate.isEmpty()) {
+            val pop = toUpdate.pop()
+            if (flashed.contains(pop)) continue
+            val value = matrix[pop.first][pop.second]
+            val newVal = if (value + 1 < 10) value + 1 else 0
+            matrix[pop.first][pop.second] = newVal
+            if (newVal == 0) {
+                tot++
+                flashed.add(pop)
+                (pop.first - 1..pop.first + 1).forEach { x ->
+                    (pop.second - 1..pop.second + 1).forEach { y ->
+                        val element = Pair(x, y)
+                        if ((0..9).contains(x) && (0..9).contains(y) && !flashed.contains(element)) toUpdate.push(element)
+                    }
+                }
+            }
+        }
+        return Pair(matrix, tot)
+    }
+    var tot = 0
     var step = Pair(matrix, 0)
     for (i in 1..100) {
         step = step(matrix)
         matrix = step.first
-        matrix.forEach { l -> println(l) }
+        val message = toStr(matrix)
+        println(message)
+        println("------------")
         tot += step.second
-        println(tot)
+//        println(tot)
     }
-    println(tot)*/
+    println(tot)
 
-    var step = 0
-    while (!sync(matrix)) {
-        matrix = step(matrix).first
-        step++
-    }
-    println(step)
+//    var step = 0
+//    while (!sync(matrix)) {
+//        matrix = step(matrix).first
+//        val message = toStr(matrix)
+//        print(message+"\r")
+//        step++
+//    }
+//    println(step)
 
 }
 
-fun sync(matrix: MutableList<MutableList<Int>>): Boolean {
-    return matrix.all { l -> l.all { i -> i == 0 } }
-}
-
-fun step(matrix: MutableList<MutableList<Int>>): Pair<MutableList<MutableList<Int>>, Int> {
-    val toUpdate = ArrayDeque<Pair<Int, Int>>()
-    toUpdate.addAll((0..9).toList().flatMap { x -> (0..9).toList().map { y -> Pair(x, y) } })
-    var tot = 0
-    val flashed = HashSet<Pair<Int, Int>>()
-    while (!toUpdate.isEmpty()) {
-        val pop = toUpdate.pop()
-        if (flashed.contains(pop)) continue
-        val value = matrix[pop.first][pop.second]
-        val newVal = if (value + 1 < 10) value + 1 else 0
-        matrix[pop.first][pop.second] = newVal
-        if (newVal == 0) {
-            tot++
-            flashed.add(pop)
-            (pop.first - 1..pop.first + 1).forEach { x ->
-                (pop.second - 1..pop.second + 1).forEach { y ->
-                    val element = Pair(x, y)
-                    if ((0..9).contains(x) && (0..9).contains(y) && !flashed.contains(element)) toUpdate.push(element)
-                }
-            }
-        }
+fun toStr(matrix: MutableList<MutableList<Int>>): String {
+    return matrix.joinToString("\n") { l ->
+        l.map { i -> if (i == 0) red(i.toString())  else i }.joinToString("")
     }
-    return Pair(matrix, tot)
 }
 
 fun day10(lines: List<String>) {
