@@ -7,13 +7,51 @@ import java.io.File
 fun main(args: Array<String>) {
     val sessionId = args[0]
     val puzzleInputWriter = PuzzleInputWriter(sessionId)
-    val day = 8
-//    val lines = listOf("FBFBBFFRLR")
-    val lines = File("src/main/resources/aoc20/day"+day+"_test.txt").readLines()
-//    val lines = puzzleInputWriter.linesOfDay("2020", day)
-    day8(lines)
+    val day = 9
+//    val lines = File("src/main/resources/aoc20/day"+day+"_test.txt").readLines()
+    val lines = puzzleInputWriter.linesOfDay("2020", day)
+    day9(lines)
 }
 
+fun day9(lines: List<String>) {
+    val preambleSize =25
+    val ints = lines.map { s -> s.toLong() }
+    var invalidValue = -1L
+    for(index in ints.indices) {
+        if(index<preambleSize) continue
+        val value = ints[index]
+        val preambleIdx = index - preambleSize until index
+        if(!preambleIdx.any { i -> (i+1..preambleIdx.last).any {j -> if(i==j) false else ints[i] + ints[j] == value } }) {
+            println("$index::$value")
+            invalidValue = value
+            break
+        }
+    }
+    println(invalidValue)
+
+
+    for (index1 in ints.indices) {
+        var tot = ints[index1]
+        println("---------$tot-------------")
+        for (index in index1+1 until ints.size) {
+            tot += ints[index]
+            if(tot==invalidValue) {
+                println("$tot   $invalidValue $index1 $index")
+                val subList = ints.subList(index1, index + 1)
+                val res = subList.maxOrNull()!!.plus(subList.minOrNull()!!.toLong())
+                println(res)
+                break
+            } else if(tot>invalidValue) {
+                println("BUST $index")
+                break
+            }
+        }
+        if(tot==invalidValue)
+            break
+    }
+
+
+}
 fun day8(lines: List<String>) {
     val instructions = lines.map { s -> s.split(" ").let { split -> Pair(split[0], split[1].toInt()) } }
     val indexOfNopJmp = instructions.mapIndexed { i, instr -> if (instr.first == "acc") null else i }.filterNotNull()
