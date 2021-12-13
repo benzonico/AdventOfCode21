@@ -1,24 +1,71 @@
 package aoc21
 
 import utils.PuzzleInputWriter
-import java.io.File
 import java.util.*
 import com.github.ajalt.mordant.rendering.TextColors.*
-import com.github.ajalt.mordant.rendering.TextStyles.*
-import com.github.ajalt.mordant.terminal.Terminal
+import java.io.File
 
 // https://github.com/ajalt/mordant text formatting
+typealias Path = List<String>
+typealias Point = Pair<Int, Int>
+
 fun main(args: Array<String>) {
     val sessionId = args[0]
     val day = Calendar.getInstance().get(Calendar.DAY_OF_MONTH)
     val puzzleInputWriter = PuzzleInputWriter(sessionId)
-//    val lines = File("src/main/resources/aoc21/day12_test3.txt").readLines()
-    val lines = puzzleInputWriter.writeDayPuzzleToFile("2021", 11).readLines()
-    day11(lines)
+//    val lines = File("src/main/resources/aoc21/day13_test.txt").readLines()
+    val lines = puzzleInputWriter.writeDayPuzzleToFile("2021", day).readLines()
+    day(lines)
 }
-typealias Path = List<String>
 
 fun day(lines: List<String>) {
+    var mut = emptyList<Point>().toMutableList()
+    var instr = emptyList<String>().toMutableList()
+    var instrLine= false
+    for (l in lines) {
+        if(l.isBlank()) {
+            instrLine = true
+            continue
+        }
+        if(!instrLine) mut.add(l.split(",").let { s -> Point(s[0].toInt(), s[1].toInt()) })
+        else instr.add(l)
+    }
+    val instructions = instr.map { l -> l.split("=").let { s -> Pair(s[0].last()=='x', s[1].toInt()) } }
+    println(instructions)
+    //fold along x=655
+    var points = mut.toList()
+    for (i in instructions) {
+       points = if(i.first) foldLeft(i.second, points) else foldUp(i.second, points)
+    }
+    val maxX = points.maxOf { p -> p.first }
+    val maxY = points.maxOf { p-> p.second }
+    val matrix:MutableList<MutableList<String>> = emptyList<MutableList<String>>().toMutableList()
+    for(y in 0..maxY ) {
+        val ligne = emptyList<String>().toMutableList()
+        matrix.add(ligne)
+        for (x in 0..maxX) {
+            ligne.add(".")
+        }
+    }
+    points.forEach { p -> matrix[p.second][p.first] = "#" }
+
+    println(points)
+    fun toStr(matrix: MutableList<MutableList<String>>): String {
+        return matrix.joinToString("\n") { l ->
+            l.map { i -> if (i == "#") red(i.toString())  else i }.joinToString("")
+        }
+    }
+    //pghzbfjc
+    println(toStr(matrix))
+}
+fun foldUp(fold:Int, points:List<Point>):List<Point>{
+    return points.map { p -> if(p.second>fold) Point(p.first, 2*fold-p.second) else p }.toSet().toList()
+}
+
+fun foldLeft(fold:Int, points:List<Point>):List<Point>{
+    return points.map { p -> if(p.first>fold) Point(2*fold-p.first, p.second) else p }.toSet().toList()
+}
+fun day12(lines: List<String>) {
     val immutGraph = lines.map { l -> l.split("-") }.groupBy({ a -> a[0] }, { a -> a[1] })
     val graph = immutGraph.toMutableMap()
 
@@ -198,7 +245,7 @@ fun day9(lines: List<String>) {
 //    println( lines.flatMapIndexed{ j, l -> l.mapIndexed{ i, nb -> riskLevel(i, j, nb.toString().toInt(), lines) }}.sum())
     val lowestPoints = lines.flatMapIndexed { y, l ->
         l.mapIndexed { i, nb ->
-            if (isLowest(i, y, nb.toString().toInt(), lines)) Point(i, y, nb.toString().toInt()) else null
+            if (isLowest(i, y, nb.toString().toInt(), lines)) Point9(i, y, nb.toString().toInt()) else null
         }
     }.filterNotNull()
     println(lowestPoints)
@@ -207,13 +254,13 @@ fun day9(lines: List<String>) {
     println(sortedBasinSize[0] * sortedBasinSize[1] * sortedBasinSize[2])
 }
 
-class Point(val x: Int, val y: Int, val nb: Int) {
+class Point9(val x: Int, val y: Int, val nb: Int) {
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as Point
+        other as Point9
 
         if (x != other.x) return false
         if (y != other.y) return false
@@ -229,8 +276,8 @@ class Point(val x: Int, val y: Int, val nb: Int) {
 
     fun basinSize(lines: List<String>): Int {
         println("Compute for $this")
-        val explored = java.util.HashSet<Point>()
-        var toVisit = ArrayDeque<Point>()
+        val explored = java.util.HashSet<Point9>()
+        var toVisit = ArrayDeque<Point9>()
         toVisit.addAll(adjacentPoints(lines).filter { p -> p.nb != 9 })
         while (!toVisit.isEmpty()) {
             val current = toVisit.pop()
@@ -243,17 +290,17 @@ class Point(val x: Int, val y: Int, val nb: Int) {
         return explored.size
     }
 
-    fun adjacentPoints(lines: List<String>): List<Point> {
-        val res = ArrayList<Point>()
+    fun adjacentPoints(lines: List<String>): List<Point9> {
+        val res = ArrayList<Point9>()
         // left
         val line = lines[y]
-        if (x != 0) res.add(Point(x - 1, y, line[x - 1].toString().toInt()))
+        if (x != 0) res.add(Point9(x - 1, y, line[x - 1].toString().toInt()))
         //right
-        if (x < line.length - 1) res.add(Point(x + 1, y, line[x + 1].toString().toInt()))
+        if (x < line.length - 1) res.add(Point9(x + 1, y, line[x + 1].toString().toInt()))
         //up
-        if (y != 0) res.add(Point(x, y - 1, lines[y - 1][x].toString().toInt()))
+        if (y != 0) res.add(Point9(x, y - 1, lines[y - 1][x].toString().toInt()))
         //down
-        if (y < lines.size - 1) res.add(Point(x, y + 1, lines[y + 1][x].toString().toInt()))
+        if (y < lines.size - 1) res.add(Point9(x, y + 1, lines[y + 1][x].toString().toInt()))
 //        println("$this....$res")
         return res
     }
