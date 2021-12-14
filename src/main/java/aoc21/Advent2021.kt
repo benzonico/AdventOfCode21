@@ -13,14 +13,90 @@ fun main(args: Array<String>) {
     val sessionId = args[0]
     val day = Calendar.getInstance().get(Calendar.DAY_OF_MONTH)
     val puzzleInputWriter = PuzzleInputWriter(sessionId)
-//    val lines = File("src/main/resources/aoc21/day13_test.txt").readLines()
+//    val lines = File("src/main/resources/aoc21/day14_test.txt").readLines()
     val lines = puzzleInputWriter.writeDayPuzzleToFile("2021", day).readLines()
     day(lines)
 }
 
 fun day(lines: List<String>) {
+    val start = lines[0]
+    println(start)
+    val startPairs = toPairs(start)
+    val rules =
+        (2 until lines.size).map { i -> lines[i] }.associate { l -> l.split(" -> ").let { s -> Pair(s[0], s[1]) } }
+    var polymer = start
+
+    fun newPairs(pair:String, number:Long):Map<String,Long> {
+         return toPairs(pair[0].toString() + rules[pair] + pair[1].toString()).groupingBy { it }.eachCount().mapValues { e -> e.value*number }
+    }
+    fun newPairs(pairs:Map<String,Long>):Map<String,Long> {
+        return pairs.map { p -> newPairs(p.key, p.value) }.reduce{  acc, map ->
+            val res = acc.toMutableMap()
+            map.forEach { (key, value) ->
+                res[key] = res.getOrDefault(key, 0) + value
+            }
+            res }
+    }
+
+    var pairMap = startPairs.groupingBy { it }.eachCount().mapValues { e -> e.value.toLong()  }
+    var pairs = startPairs
+    println(pairMap)
+    for (i in 1..40) {
+//        polymer = pairs[0][0].toString() + pairs.map { p -> rules[p] + p[1] }.joinToString("")
+//        pairs = toPairs(polymer)
+//        println(polymer)
+        pairMap = newPairs(pairMap)
+        println(pairMap.values.sum())
+        println(pairMap)
+    }
+
+    fun score(pairMap:Map<String, Long>):Long {
+        val next = pairMap.flatMap { e -> listOf(Pair(e.key[0], e.value)) }.groupBy({ it.first }, { it.second })
+        val charMap = next.map { (key, values) -> key to values.sum() }.toMap()
+        println(next)
+        println(charMap)
+        val lastChar = start[start.length - 1]
+        val toMutableMap = charMap.toMutableMap()
+        toMutableMap[lastChar] =  charMap.getOrDefault(lastChar, 0) +1L
+        return toMutableMap.maxOf { e -> e.value }-toMutableMap.minOf { e->e.value }
+    }
+    println(score(pairMap))
+
+///(mapA.asSequence() + mapB.asSequence())
+//    .distinct()
+//    .groupBy({ it.key }, { it.value })
+//    .mapValues { (_, values) -> values.joinToString(",") }
+    var max = mutableMapOf<String, Int>()
+    var min = mutableMapOf<String, Int>()
+//    startPairs.forEach { pair ->
+//        var pairs = listOf(pair)
+//        for (step in 1..40) {
+//            polymer = pairs[0][0].toString() + pairs.map { p -> rules[p] + p[1] }.joinToString("")
+//            println("  $pair : ${polymer.length}")
+//            pairs = toPairs(polymer)
+//        }
+//        val groupBy = polymer.groupBy { c -> c }.map { e -> Pair(e.key, e.value.size) }//.forEach { elem -> myMap.put(elem.first, myMap.getOrDefault(elem.first,0)+elem.second) }
+//        val maxOf = groupBy.maxOf { e -> e.second }
+//        val minOf = groupBy.minOf { e -> e.second }
+//        max[pair] = maxOf
+//        min[pair] = minOf
+//    }
+//    println(maxOf-minOf)
+}
+
+private fun toPairs(start: String) =
+    start.mapIndexedNotNull { i, c -> if (i == start.length - 1) null else start.substring(i, i + 2) }
+
+fun day13(lines: List<String>) {
     var mut = emptyList<Point>().toMutableList()
     var instr = emptyList<String>().toMutableList()
+    fun foldUp(fold:Int, points:List<Point>):List<Point>{
+        return points.map { p -> if(p.second>fold) Point(p.first, 2*fold-p.second) else p }.toSet().toList()
+    }
+
+    fun foldLeft(fold:Int, points:List<Point>):List<Point>{
+        return points.map { p -> if(p.first>fold) Point(2*fold-p.first, p.second) else p }.toSet().toList()
+    }
     var instrLine= false
     for (l in lines) {
         if(l.isBlank()) {
@@ -58,13 +134,7 @@ fun day(lines: List<String>) {
     //pghzbfjc
     println(toStr(matrix))
 }
-fun foldUp(fold:Int, points:List<Point>):List<Point>{
-    return points.map { p -> if(p.second>fold) Point(p.first, 2*fold-p.second) else p }.toSet().toList()
-}
 
-fun foldLeft(fold:Int, points:List<Point>):List<Point>{
-    return points.map { p -> if(p.first>fold) Point(2*fold-p.first, p.second) else p }.toSet().toList()
-}
 fun day12(lines: List<String>) {
     val immutGraph = lines.map { l -> l.split("-") }.groupBy({ a -> a[0] }, { a -> a[1] })
     val graph = immutGraph.toMutableMap()
