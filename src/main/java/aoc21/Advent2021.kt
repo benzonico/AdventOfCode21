@@ -13,12 +13,79 @@ fun main(args: Array<String>) {
     val sessionId = args[0]
     val day = Calendar.getInstance().get(Calendar.DAY_OF_MONTH)
     val puzzleInputWriter = PuzzleInputWriter(sessionId)
-//    val lines = File("src/main/resources/aoc21/day14_test.txt").readLines()
+//    val lines = File("src/main/resources/aoc21/day"+day+"_test.txt").readLines()
     val lines = puzzleInputWriter.writeDayPuzzleToFile("2021", day).readLines()
     day(lines)
 }
 
 fun day(lines: List<String>) {
+    val cave = lines.map { s -> s.toCharArray().map { c -> c.toString().toInt() } }
+
+    println(cave)
+    val maxY = cave.size*5-1
+    val maxX = cave[0].size*5-1
+    val MAX = maxX *9*2
+
+    class Path(val x:Int, val y:Int) {
+        fun positionRisk(): Int {
+            val hTile = x/cave.size
+            val vTile = y/cave.size
+            val positionRisk = cave[y-vTile*cave.size][x-hTile*cave.size] + hTile + vTile
+            return if(positionRisk > 9) positionRisk -9 else positionRisk
+        }
+        var risk:Int = MAX
+    }
+    val allPaths = (0..maxY).map { y -> (0..maxX).map { x-> Path(x,y) } }
+    fun getPath(y: Int, x: Int): Path {
+        return allPaths[y][x]
+    }
+
+    fun neighbours(path:Path):List<Path> {
+        val x = path.x
+        val y = path.y
+        val res = emptyList<Path>().toMutableList()
+        if(y != 0) res.add(getPath(y - 1, x))
+        if(y!=maxY) res.add(getPath(y + 1, x))
+        if(x!=0) res.add(getPath(y, x-1))
+        if(x!=maxX) res.add(getPath(y,x+1))
+        return res
+    }
+
+    fun newPaths(path:Path):List<Path> {
+        val neighbours = neighbours(path).filter { n->path.risk+n.positionRisk()<n.risk }
+        neighbours.forEach { n -> n.risk = path.risk+n.positionRisk() }
+        return neighbours
+    }
+    val toExplore = listOf(Path(0,0)).toMutableList()
+    toExplore[0].risk = 0
+    while (toExplore.isNotEmpty()) {
+        val currentPath = toExplore.removeAt(0)
+        toExplore.addAll(newPaths(currentPath))
+    }
+    println(allPaths[maxY][maxX].risk)
+//    paths.forEach { row -> row.forEach { path -> newPaths(path) }
+    //part1 with dijkstra
+    //data class Node(val x:Int, val y:Int, val risk:Int)
+
+    /*val nodes = cave.mapIndexed { y, row -> row.mapIndexed { x, e -> Node(x, y, e) } }
+    fun neighbours(nodes:List<List<Node>>, node:Node):List<Node> {
+        val x = node.x
+        val y = node.y
+        val res = emptyList<Node>().toMutableList()
+        if(y != 0) res.add(nodes[y - 1][x])
+        if(y!=maxY) res.add(nodes[y + 1][x])
+        if(x!=0) res.add(nodes[y][x-1])
+        if(x!=maxX) res.add(nodes[y][x+1])
+        return res
+    }*/
+    /*val weights =  nodes.flatMap { l -> l.flatMap { n -> neighbours(nodes, n).map { v -> Pair(Pair(n, v), v.risk) } } }.toMap()
+    val graph = Graph(weights)
+    val dijkstra = dijkstra(graph, nodes[0][0])
+    println(shortestPath(dijkstra, nodes[0][0], nodes[maxY][maxX]).sumOf { n -> n.risk }-nodes[0][0].risk)*/
+
+}
+
+fun day14(lines: List<String>) {
     val start = lines[0]
     println(start)
     val startPairs = toPairs(start)
