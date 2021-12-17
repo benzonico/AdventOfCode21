@@ -13,12 +13,96 @@ fun main(args: Array<String>) {
     val sessionId = args[0]
     val day = Calendar.getInstance().get(Calendar.DAY_OF_MONTH)
     val puzzleInputWriter = PuzzleInputWriter(sessionId)
-//    val lines = File("src/main/resources/aoc21/day"+day+"_test.txt").readLines()
+//    val lines = File("src/main/resources/aoc21/day"+da//y+"_test.txt").readLines()
     val lines = puzzleInputWriter.writeDayPuzzleToFile("2021", day).readLines()
     day(lines)
 }
 
 fun day(lines: List<String>) {
+
+}
+fun day16(lines: List<String>) {
+    lines.forEach { l ->
+        val binaryStr = l.toCharArray().map { c -> Integer.toBinaryString(c.toString().toInt(16)) }
+            .joinToString("") { b -> b.padStart(4, '0') }
+
+        class Packet {
+            val subPacket: MutableList<Packet> = emptyList<Packet>().toMutableList()
+            var literal: Long = 0
+            var version: Int = 0
+            var type: Int = 0
+            override fun toString(): String {
+                return "Packet(version=$version, type=$type, literal=$literal, sub=$subPacket)"
+            }
+
+            fun sumVersion(): Int {
+                return version + subPacket.sumOf { p -> p.sumVersion() }
+            }
+
+            fun calculate():Long {
+                return when (type) {
+                    0 -> subPacket.sumOf { p -> p.calculate() }
+                    1 -> subPacket.map { p -> p.calculate() }.reduce{ l1,l2->l1*l2}
+                    2 -> subPacket.minOfOrNull { p -> p.calculate() }?:0
+                    3 -> subPacket.maxOfOrNull { p -> p.calculate() }?:0
+                    4 -> literal
+                    5 -> if(subPacket[0].calculate() > subPacket[1].calculate()) 1 else 0
+                    6 -> if(subPacket[0].calculate() < subPacket[1].calculate()) 1 else 0
+                    7 -> if(subPacket[0].calculate() == subPacket[1].calculate()) 1 else 0
+                    else -> 0
+                }
+            }
+
+        }
+
+        fun parsePacket(str: String): Pair<Packet, Int> {
+            val packet = Packet()
+            packet.version = str.substring(0, 3).toInt(2)
+            packet.type = str.substring(3, 6).toInt(2)
+            var strIndex = 6
+            if (packet.type == 4) {
+                var currentVal = str.substring(strIndex + 1, strIndex + 5)
+                var currentBit = str.substring(strIndex, strIndex + 5)
+                strIndex += 5
+                while (currentBit[0] != '0') {
+                    currentBit = str.substring(strIndex, strIndex + 5)
+                    currentVal += currentBit.substring(1)
+                    strIndex += 5
+                }
+                packet.literal = currentVal.toLong(2)
+            } else {
+                val lTypeId = str[strIndex]
+                strIndex++
+                if (lTypeId == '0') {
+                    val length = str.substring(strIndex, strIndex + 15).toInt(2)
+                    strIndex += 15
+                    val stop = strIndex + length
+                    while (strIndex != stop) {
+                        val parseSubPacket = parsePacket(str.substring(strIndex))
+                        strIndex += parseSubPacket.second
+                        packet.subPacket.add(parseSubPacket.first)
+                    }
+                } else {
+                    val nbSubPacket = str.substring(strIndex, strIndex + 11).toInt(2)
+                    strIndex += 11
+                    for (i in 1..nbSubPacket) {
+                        val parseSubPacket = parsePacket(str.substring(strIndex))
+                        strIndex += parseSubPacket.second
+                        packet.subPacket.add(parseSubPacket.first)
+                    }
+                }
+
+            }
+            return Pair(packet, strIndex)
+        }
+
+        val parsePacket = parsePacket(binaryStr)
+        println(parsePacket.first.calculate())
+    }
+
+
+}
+fun day15(lines: List<String>) {
     val cave = lines.map { s -> s.toCharArray().map { c -> c.toString().toInt() } }
 
     println(cave)
