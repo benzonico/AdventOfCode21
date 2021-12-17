@@ -4,6 +4,7 @@ import utils.PuzzleInputWriter
 import java.util.*
 import com.github.ajalt.mordant.rendering.TextColors.*
 import java.io.File
+import kotlin.math.max
 
 // https://github.com/ajalt/mordant text formatting
 typealias Path = List<String>
@@ -19,7 +20,52 @@ fun main(args: Array<String>) {
 }
 
 fun day(lines: List<String>) {
+    
+}
+fun day17(lines: List<String>) {
+    // target area: x=70..125, y=-159..-121
+    //target area: x=20..30, y=-10..-5
+    val xrange = 70..125
+    val yrange =  -159..-121
+//    val xrange = 20..30
+//    val yrange =  -10..-5
+    data class Pos(val x:Int, val y:Int, val velocity:Pair<Int, Int>) {
 
+        fun next():Pos {
+            val xVel = if(velocity.first>0) velocity.first - 1 else if(velocity.first<0) velocity.first +1 else 0
+            return Pos(x + velocity.first, y + velocity.second, Pair(xVel, velocity.second -1 ))
+        }
+
+        fun isInTarget():Boolean {
+            return xrange.contains(x) && yrange.contains(y)
+        }
+        fun overshoot():Boolean {
+            return xrange.last<x || yrange.first>y
+        }
+    }
+    var maxY = 0
+    var list = emptyList<Pair<Int, Int>>().toMutableList()
+    for (y in yrange.first..2000) {
+        for (x in 0..xrange.last) {
+            var pos = Pos(0,0, velocity = Pair(x, y) )
+            var currentMax = 0
+            while (true) {
+                pos = pos.next()
+                currentMax = max(currentMax, pos.y)
+                if (pos.overshoot() || pos.isInTarget()) {
+                    break
+                }
+            }
+            if (pos.isInTarget()) {
+                val message = "velocity $x $y : $currentMax"
+                list.add(Pair(x, y))
+//                println(message)
+                maxY = max(maxY, currentMax)
+            }
+        }
+    }
+    println(list.size)
+    println(maxY)
 }
 fun day16(lines: List<String>) {
     lines.forEach { l ->
