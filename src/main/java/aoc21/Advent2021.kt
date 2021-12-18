@@ -14,13 +14,230 @@ fun main(args: Array<String>) {
     val sessionId = args[0]
     val day = Calendar.getInstance().get(Calendar.DAY_OF_MONTH)
     val puzzleInputWriter = PuzzleInputWriter(sessionId)
-//    val lines = File("src/main/resources/aoc21/day"+da//y+"_test.txt").readLines()
+//    val lines = File("src/main/resources/aoc21/day"+day+"_test.txt").readLines()
     val lines = puzzleInputWriter.writeDayPuzzleToFile("2021", day).readLines()
     day(lines)
 }
 
 fun day(lines: List<String>) {
-    
+
+
+//    val add = nbs.reduce { s1, s2 -> s1.add(s2) }
+//    println(add)
+//    println(add.magnitude())
+    val nbs = lines.map { l -> SnailFishNb.parse(l, 0).first }
+    var max = -1
+    for (i in 0 until nbs.size) {
+        for (j in i until nbs.size) {
+            if (i != j) {
+                var pristineNb = lines.map { l -> SnailFishNb.parse(l, 0).first }
+                var nb = pristineNb[i]
+                var other = pristineNb[j]
+                max = max(max, nb.add(other).magnitude())
+
+                 pristineNb = lines.map { l -> SnailFishNb.parse(l, 0).first }
+                 nb = pristineNb[i]
+                 other = pristineNb[j]
+                max = max(max, other.add(nb).magnitude())
+            }
+        }
+    }
+    println(max)
+
+}
+abstract class SnailFishBase{
+    var  parent:SnailFishBase? = null
+    fun add(nb:SnailFishBase):SnailFishBase {
+        return SnailFishNb(this, nb).reduce()
+    }
+    abstract fun magnitude():Int
+    fun level():Int {
+        return 1 + (parent?.level() ?: -1)
+    }
+    fun shouldExplode():Boolean {
+        return level() == 4
+    }
+    abstract fun explodingPair():SnailFishBase?
+    abstract fun reduce():SnailFishBase
+    abstract fun shouldSplit(): RealNb?
+    fun addToLeft(leftVal: Int) {
+        if(parent == null) {
+            return
+        }
+        val par = parent as SnailFishNb
+        if(par.left === this) {
+            par.addToLeft(leftVal)
+        } else {
+            var node = par.left
+            while (node !is RealNb) {
+                node = (node as SnailFishNb).right
+            }
+            node.value+=leftVal
+        }
+
+    }
+    fun addToRight(rightVal: Int) {
+        if(parent == null) {
+            return
+        }
+        val par = parent as SnailFishNb
+        if(par.right === this) {
+            par.addToRight(rightVal)
+        } else {
+            var node = par.right
+            while (node !is RealNb) {
+                node = (node as SnailFishNb).left
+            }
+            node.value+=rightVal
+        }
+    }
+
+}
+class RealNb(var value:Int) : SnailFishBase() {
+    override fun reduce(): SnailFishBase {
+        return this
+    }
+
+    override fun shouldSplit(): RealNb? {
+        return if(value >= 10) this else null
+    }
+    fun split():SnailFishNb {
+        return if(value%2==0) SnailFishNb(RealNb(value/2), RealNb(value/2))
+        else  SnailFishNb(RealNb(value/2), RealNb(value/2+1))
+    }
+
+    override fun magnitude(): Int {
+        return value
+    }
+
+    override fun explodingPair():SnailFishBase? {
+        return null
+    }
+    override fun toString(): String {
+        return value.toString()
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as RealNb
+
+        if (value != other.value) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return value
+    }
+
+}
+class SnailFishNb(var left:SnailFishBase, var right:SnailFishBase) : SnailFishBase() {
+    init {
+        left.parent = this
+        right.parent = this
+    }
+    companion object {
+        fun parseElem(s: String, i: Int): Pair<SnailFishBase, Int> {
+            return if (s[i].toString().matches(Regex("\\d")))
+                Pair(RealNb(s[i].toString().toInt()), i+1)
+            else parse(s, i)
+        }
+
+        fun parse(s: String, i:Int): Pair<SnailFishBase, Int> {
+            // e -> s | n
+            // s -> [e,e]
+            var parseElem = parseElem(s, i + 1)
+            val left = parseElem.first
+            var index = parseElem.second
+            parseElem = parseElem(s, index +1)
+            val right = parseElem.first
+            index = parseElem.second
+            return Pair(SnailFishNb(left, right), index+1)
+        }
+
+    }
+    override fun reduce():SnailFishBase {
+        val explodingPair = explodingPair()
+//        println(">>>>>>>>>>>>>$this")
+        return if(explodingPair!=null) {
+            val snailFishNb = explodingPair as SnailFishNb
+            val leftVal  = (snailFishNb.left as RealNb).value
+            val rightVal  = (snailFishNb.right as RealNb).value
+            explodingPair.addToLeft(leftVal)
+            explodingPair.addToRight(rightVal)
+            replaceWithZero(explodingPair)
+//            println("explode $explodingPair $this")
+            this.reduce()
+        } else {
+            val shouldSplit = shouldSplit()
+            if(shouldSplit != null) {
+                replaceWithPair(shouldSplit)
+//                println("split $shouldSplit $this")
+                this.reduce()
+            } else {
+                this
+            }
+        }
+    }
+
+    override fun shouldSplit(): RealNb? {
+        return left.shouldSplit()?:right.shouldSplit()
+    }
+
+    override fun magnitude(): Int {
+        return left.magnitude()*3+2*right.magnitude()
+    }
+
+    override fun explodingPair(): SnailFishBase? {
+        return if (shouldExplode()) this else left.explodingPair() ?: right.explodingPair()
+    }
+    fun replaceWithPair(real:RealNb) {
+        val par = real.parent as SnailFishNb
+        val split = real.split()
+        split.parent = par
+        if (par.left == real) {
+            par.left = split
+        } else {
+            par.right = split
+        }
+    }
+
+    fun replaceWithZero(explodingPair:SnailFishNb) {
+        val par = explodingPair.parent as SnailFishNb
+        val realNb = RealNb(0)
+        realNb.parent = par
+        if (par.left == explodingPair) {
+            par.left = realNb
+        } else {
+            par.right = realNb
+        }
+    }
+
+    override fun toString(): String {
+        return "[$left,$right]"
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as SnailFishNb
+
+        if (left != other.left) return false
+        if (right != other.right) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = left.hashCode()
+        result = 31 * result + right.hashCode()
+        return result
+    }
+
+
 }
 fun day17(lines: List<String>) {
     // target area: x=70..125, y=-159..-121
