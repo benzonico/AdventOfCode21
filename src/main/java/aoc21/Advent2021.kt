@@ -14,14 +14,73 @@ fun main(args: Array<String>) {
     val sessionId = args[0]
     val day = Calendar.getInstance().get(Calendar.DAY_OF_MONTH)
     val puzzleInputWriter = PuzzleInputWriter(sessionId)
-//    val lines = File("src/main/resources/aoc21/day"+day+"_test.txt").readLines()
-    val lines = puzzleInputWriter.writeDayPuzzleToFile("2021", day).readLines()
+    val lines = File("src/main/resources/aoc21/day"+day+"_test.txt").readLines()
+//    val lines = puzzleInputWriter.writeDayPuzzleToFile("2021", day).readLines()
     day(lines)
 }
 
 fun day(lines: List<String>) {
+data class Beacon(val x:Int, val y:Int, val z:Int)
+data class Scanner(val beacons:List<Beacon>)
+    val scanners = emptyList<Scanner>().toMutableList()
+    var beacons = emptyList<Beacon>().toMutableList()
+    for (l in lines) {
+        if(l.startsWith("--")) continue
+        if(l.isBlank()) {
+            scanners.add(Scanner(beacons))
+            beacons = emptyList<Beacon>().toMutableList()
+        } else {
+            val beacon = l.split(",").map { s -> s.toInt() }.let { lst -> Beacon(lst[0], lst[1], lst[2]) }
+            beacons.add(beacon)
+        }
+    }
+    fun swaps(): List<(Beacon) -> Beacon> {
+        return listOf(
+            //face towards x
+            { b: Beacon -> b },
+            { b: Beacon -> Beacon(b.x, b.z, -b.y) },
+            { b: Beacon -> Beacon(b.x, -b.y, -b.z) },
+            { b: Beacon -> Beacon(b.x, -b.z, b.y) },
 
+            { b: Beacon -> Beacon(-b.x, -b.y, b.z) },
+            { b: Beacon -> Beacon(-b.x, -b.z, -b.y) },
+            { b: Beacon -> Beacon(-b.x, b.y, -b.z) },
+            { b: Beacon -> Beacon(-b.x, b.z, b.y) },
 
+            //face towards y
+            { b: Beacon -> Beacon(-b.y, b.x, b.z) },
+            { b: Beacon -> Beacon(-b.z, b.x, -b.y) },
+            { b: Beacon -> Beacon(b.y, b.x, -b.z) },
+            { b: Beacon -> Beacon(b.z, b.x, b.y) },
+
+            { b: Beacon -> Beacon(-b.y, -b.x, b.z) },
+            { b: Beacon -> Beacon(-b.z, -b.x, -b.y) },
+            { b: Beacon -> Beacon(b.y, -b.x, -b.z) },
+            { b: Beacon -> Beacon(b.z, -b.x, b.y) },
+
+            //face towards z
+            { b: Beacon -> Beacon(-b.z, b.y, b.x) },
+            { b: Beacon -> Beacon(b.y, b.z, b.x) },
+            { b: Beacon -> Beacon(b.z, -b.y, b.x) },
+            { b: Beacon -> Beacon(-b.y, -b.z, b.x) },
+
+            { b: Beacon -> Beacon(b.z, b.y, -b.x) },
+            { b: Beacon -> Beacon(b.y, -b.z, -b.x) },
+            { b: Beacon -> Beacon(-b.z, -b.y, -b.x) },
+            { b: Beacon -> Beacon(-b.y, b.z, -b.x) },
+        )
+    }
+
+    val beacons0 = scanners[0].beacons
+    println(beacons0)
+    val beacons1 = scanners[1].beacons
+    for (swap in swaps()) {
+        val newBeacons = beacons1.map(swap)
+    }
+    println(scanners)
+
+}
+fun day18(lines: List<String>) {
 //    val add = nbs.reduce { s1, s2 -> s1.add(s2) }
 //    println(add)
 //    println(add.magnitude())
